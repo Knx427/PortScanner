@@ -36,7 +36,7 @@ def scan(ip_address, port_chunk):
         except: 
             None
 
-# user input for ip + validation
+    # user input for ip + validation
 def get_valid_ip(default='192.168.1.1'):
     while True:
         ip = input(f"Enter Valid IP to Scan (default {default}):").strip() or default
@@ -46,7 +46,7 @@ def get_valid_ip(default='192.168.1.1'):
         except OSError:
             print(f"Invalid IP Adddress - try again.")
 
-# user input for ports + validation
+    # user input for ports + validation
 def get_valid_port_range(default='0-10000'):
     while True:
         port = input(f"Enter Valid Port Range, format: start-end (default {default}):").strip() or default
@@ -59,7 +59,7 @@ def get_valid_port_range(default='0-10000'):
             pass
         print(f"Invalid Range. Use format start-end, range: 0-65535.")
 
-# user input for Thread level            
+    # user input for Thread level            
 def get_workers(default=100):
     choices = {"1": default, "2": 200, "3": 300, "4": 400, "5": 500}
     while True:
