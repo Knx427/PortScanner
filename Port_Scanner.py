@@ -8,6 +8,22 @@ import socket
 # Time - Time needed to run
 import time
 
+# ANSI color codes
+RED = "\033[31m"
+YELLOW = "\033[33m"
+GREEN = "\033[32m"
+RESET = "\033[0m"
+
+def color_text(message):
+    if "Error" in message:
+        return f"{RED}{message}{RESET}"
+    elif "[~]" in message:
+        return f"{YELLOW}{message}{RESET}"
+    elif "[!]" in message:
+        return f"{GREEN}{message}{RESET}"
+    else:
+        return message
+
 WORKERS = 100 # Threads to use
 
     # Gen Port ranges to scan
@@ -23,16 +39,15 @@ def gen_port_chunks(port_range):
         port_chunks.append([start, end])
     return port_chunks # return splited port ranges
     
-    # Scan ip address in Port range 
+    # Scan ip address in Port range per thread
 def scan(ip_address, port_chunk):
-    print(f"[~] Scanning {ip_address} from {port_chunk[0]} to {port_chunk[1]}.") # eg. Scan 192.169.1.1 from 0 to 100
     for port in range(int(port_chunk[0]), int(port_chunk[1])): # for each port range do:
         try: 
             scan_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Attempt ipv4 Connection with TCP, Sock_drgram for UDP
             scan_socket.settimeout(2) # timeout after 2 sec for next port
             
             scan_socket.connect((ip_address, port)) # Connecting to Port, if open print the port 
-            print(f"[!] Port {port} is Open")
+            print(color_text(f"[!] Port {port} is Open"))
         except: 
             None
 
@@ -48,7 +63,7 @@ def get_valid_ip(default='192.168.1.1'):
                 print(f"Using IP: {ip_addr}")
             return ip_addr
         except socket.gaierror as e:
-            print(f"Error: could not resolve '{ip or socket.gethostname()}': {e}") # shows resolution errors
+            print(color_text(f"Error: could not resolve '{ip or socket.gethostname()}': {e}")) # shows resolution errors
 
     # user input for ports + validation
 def get_valid_port_range(default='0-10000'):
@@ -61,7 +76,7 @@ def get_valid_port_range(default='0-10000'):
                 return f"{start}-{end}"
         except Exception:
             pass
-        print(f"Invalid Range. Use format start-end, range: 0-65535.")
+        print(color_text(f"Error: Invalid Range. Use format start-end, range: 0-65535."))
 
     # user input for Thread level            
 def get_workers(default=100):
@@ -70,7 +85,7 @@ def get_workers(default=100):
         lvl = input(f"Enter Threads Level 1-5 (default 1={default}): ").strip() or "1"
         if lvl in choices:
             return choices[lvl]
-        print("Invalid level. Range: 1-5.")
+        print(color_text("Error: Invalid level. Range: 1-5."))
 
 
 # main func
@@ -79,13 +94,15 @@ def main():
     port_range = get_valid_port_range() # port range to scan
     WORKERS = get_workers() 
     
+    ports_scanned = port_range.split('-')
     port_chunks = gen_port_chunks(port_range)   # call in the port ranges 
     start_time = time.time() # start timer
+    print(color_text(f"[~] Scanning {ip_address} from Port {ports_scanned[0]} to {ports_scanned[1]}"))
     with ThreadPoolExecutor(max_workers=WORKERS) as executor: # submit task to threads pool 
         executor.map(scan, [ip_address] * len(port_chunks), port_chunks) # Scan ip in port range
     end_time = time.time() # stop timer
-    print(f"Scanned {port_range[1]} ports in {end_time - start_time} seconds.") # calculate time elapsed
-    print(f"Used {WORKERS} threads") # Show thread level used
+    total_time = end_time - start_time
+    print(f"Scanned {ports_scanned[1]} ports in \033[31m{total_time:.3f} seconds\033[0m, used {WORKERS} threads") # calculate time elapsed
 
         
 if __name__ == '__main__':
