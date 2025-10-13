@@ -39,12 +39,16 @@ def scan(ip_address, port_chunk):
     # user input for ip + validation
 def get_valid_ip(default='192.168.1.1'):
     while True:
-        ip = input(f"Enter Valid IP to Scan (default {default}):").strip() or default
+        ip = input(f"Enter Valid IP or hostname to Scan, (default {default}):").strip() or default 
         try:
-            socket.inet_aton(ip) # ipv4 validation
-            return ip
-        except OSError:
-            print(f"Invalid IP Adddress - try again.")
+            ip_addr = socket.gethostbyname(ip) # get ip by hostname
+            if ip_addr == socket.gethostbyname(socket.gethostname()):
+                print(f"Using local ip: {ip_addr}")
+            else:
+                print(f"Using IP: {ip_addr}")
+            return ip_addr
+        except socket.gaierror as e:
+            print(f"Error: could not resolve '{ip or socket.gethostname()}': {e}") # shows resolution errors
 
     # user input for ports + validation
 def get_valid_port_range(default='0-10000'):
@@ -69,6 +73,7 @@ def get_workers(default=100):
         print("Invalid level. Range: 1-5.")
 
 
+# main func
 def main():
     ip_address = get_valid_ip() # ip address to scan
     port_range = get_valid_port_range() # port range to scan
@@ -80,7 +85,8 @@ def main():
         executor.map(scan, [ip_address] * len(port_chunks), port_chunks) # Scan ip in port range
     end_time = time.time() # stop timer
     print(f"Scanned {port_range[1]} ports in {end_time - start_time} seconds.") # calculate time elapsed
-    print(f"Used {WORKERS} threads")
+    print(f"Used {WORKERS} threads") # Show thread level used
+
         
 if __name__ == '__main__':
     main()
