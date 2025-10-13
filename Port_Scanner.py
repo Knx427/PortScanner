@@ -60,7 +60,7 @@ def get_valid_ip(default='192.168.1.1'):
         ip = input(f"Enter Valid IP or hostname to Scan, (default {default}):").strip() or default 
         try:
             ip_addr = socket.gethostbyname(ip) # get ip by hostname
-            print(color_text(f"[~] Using IP: {ip_addr}"))
+            print(color_text(f"[~] Using IP: {ip_addr} From {socket.gethostbyaddr(ip_addr)[0]}"))
             return ip_addr
         except socket.gaierror as e:
             print(color_text(f"Error: could not resolve '{ip or socket.gethostname()}': {e}")) # shows resolution errors
