@@ -57,10 +57,7 @@ def get_valid_ip(default='192.168.1.1'):
         ip = input(f"Enter Valid IP or hostname to Scan, (default {default}):").strip() or default 
         try:
             ip_addr = socket.gethostbyname(ip) # get ip by hostname
-            if ip_addr == socket.gethostbyname(socket.gethostname()):
-                print(f"Using local ip: {ip_addr}")
-            else:
-                print(f"Using IP: {ip_addr}")
+            print(color_text(f"[~] Using IP: {ip_addr}"))
             return ip_addr
         except socket.gaierror as e:
             print(color_text(f"Error: could not resolve '{ip or socket.gethostname()}': {e}")) # shows resolution errors
@@ -73,6 +70,7 @@ def get_valid_port_range(default='0-10000'):
             start, end = port.split('-')
             start = int(start); end = int(end)
             if 0<=start <= end <= 65535:
+                print(color_text(f"[~] Selected Ports: {start}-{end}"))
                 return f"{start}-{end}"
         except Exception:
             pass
@@ -80,11 +78,24 @@ def get_valid_port_range(default='0-10000'):
 
     # user input for Thread level            
 def get_workers(default=100):
-    choices = {"1": default, "2": 200, "3": 300, "4": 400, "5": 500}
+    choices = {"1": default, "2": 200, "3": 300, "4": 400, "5": 500, "custom" : None}
     while True:
         lvl = input(f"Enter Threads Level 1-5 (default 1={default}): ").strip() or "1"
         if lvl in choices:
-            return choices[lvl]
+            if lvl == "custom":
+                while True:
+                    try:
+                        custom = int(input("Enter Custom Threads: ").strip())
+                        if custom > 0:    
+                            print(color_text(f"[~] Using Threads: {custom}\n"))                       
+                            return custom
+                        else:
+                            print(color_text("Error: Thread count must be greater than 0."))
+                    except ValueError:
+                        print(color_text("Error: Please enter a valid number."))
+            else:
+                print(color_text(f"[~] Using Threads: {choices[lvl]}\n")) 
+                return choices[lvl]
         print(color_text("Error: Invalid level. Range: 1-5."))
 
 
@@ -97,12 +108,12 @@ def main():
     ports_scanned = port_range.split('-')
     port_chunks = gen_port_chunks(port_range)   # call in the port ranges 
     start_time = time.time() # start timer
-    print(color_text(f"[~] Scanning {ip_address} from Port {ports_scanned[0]} to {ports_scanned[1]}"))
+    print(color_text(f"[~] Scanning {ip_address} from Port {ports_scanned[0]} to {ports_scanned[1]} using {WORKERS} threads"))
     with ThreadPoolExecutor(max_workers=WORKERS) as executor: # submit task to threads pool 
         executor.map(scan, [ip_address] * len(port_chunks), port_chunks) # Scan ip in port range
     end_time = time.time() # stop timer
     total_time = end_time - start_time
-    print(f"Scanned {ports_scanned[1]} ports in \033[31m{total_time:.3f} seconds\033[0m, used {WORKERS} threads") # calculate time elapsed
+    print(f"Scanned {ports_scanned[1]} ports in \033[31m{total_time:.3f} seconds\033[0m") # calculate time elapsed
 
         
 if __name__ == '__main__':
