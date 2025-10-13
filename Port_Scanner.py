@@ -10,17 +10,20 @@ import time
 
 # ANSI color codes
 RED = "\033[31m"
-YELLOW = "\033[33m"
 GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
 RESET = "\033[0m"
 
 def color_text(message):
     if "Error" in message:
         return f"{RED}{message}{RESET}"
-    elif "[~]" in message:
-        return f"{YELLOW}{message}{RESET}"
     elif "[!]" in message:
         return f"{GREEN}{message}{RESET}"
+    elif "[~]" in message:
+        return f"{YELLOW}{message}{RESET}"
+    elif "Total Ports" in message:
+        return f"{BLUE}{message}{RESET}"
     else:
         return message
 
@@ -69,7 +72,7 @@ def get_valid_port_range(default='0-10000'):
         try:
             start, end = port.split('-')
             start = int(start); end = int(end)
-            if 0<=start <= end <= 65535:
+            if 0 <= start <= end <= 65535:
                 print(color_text(f"[~] Selected Ports: {start}-{end}"))
                 return f"{start}-{end}"
         except Exception:
@@ -109,8 +112,10 @@ def main():
     port_chunks = gen_port_chunks(port_range)   # call in the port ranges 
     start_time = time.time() # start timer
     print(color_text(f"[~] Scanning {ip_address} from Port {ports_scanned[0]} to {ports_scanned[1]} using {WORKERS} threads"))
+    
     with ThreadPoolExecutor(max_workers=WORKERS) as executor: # submit task to threads pool 
-        executor.map(scan, [ip_address] * len(port_chunks), port_chunks) # Scan ip in port range
+       executor.map(scan, [ip_address] * len(port_chunks), port_chunks) # Scan ip in port range
+    
     end_time = time.time() # stop timer
     total_time = end_time - start_time
     print(f"Scanned {ports_scanned[1]} ports in \033[31m{total_time:.3f} seconds\033[0m") # calculate time elapsed
